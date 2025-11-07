@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
             TransferGoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Box(Modifier.fillMaxSize().padding(innerPadding)) {
-                        CurrencyExchangeScreen()
+                        CurrencyExchangeScreen(onNavigateBack = {})
                     }
                 }
             }

@@ -1,0 +1,14 @@
+package com.wegielek.feature.fxRatesConverter.data.remote
+
+import com.wegielek.feature.fxRatesConverter.data.model.ExchangeRateDto
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+interface ExchangeRateApi {
+    @GET("fx-rates/")
+    suspend fun getRate(
+        @Query("from") from: String,
+        @Query("to") to: String,
+        @Query("amount") amount: Double,
+    ): ExchangeRateDto
+}
