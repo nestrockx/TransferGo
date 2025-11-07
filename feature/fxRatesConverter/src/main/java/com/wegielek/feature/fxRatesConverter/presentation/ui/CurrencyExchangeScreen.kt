@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,7 +19,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -98,227 +101,238 @@ fun CurrencyExchangeScreen(
         viewModel.getRate()
     }
 
-    Box(
-        Modifier.fillMaxWidth().height(200.dp).padding(horizontal = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .align(Alignment.BottomCenter)
-                .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                .background(MaterialTheme.colorScheme.tertiary)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Text("Receiver gets")
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val flag = flagFromString(toCurrency)
-                    flag?.let {
-                        Image(
-                            painter = painterResource(it.resId),
-                            contentDescription = "Flag",
-                        )
-                    }
-                    Spacer(Modifier.padding(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier =
-                            Modifier.clickable {
-                                toExpanded = true
-                            },
-                    ) {
-                        Text(toCurrency, fontWeight = FontWeight.Bold)
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Dropdown",
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = toExpanded,
-                        onDismissRequest = { toExpanded = false },
-                        containerColor = MaterialTheme.colorScheme.background,
-                    ) {
-                        currencies.filter { it != fromCurrency }.forEach { currency ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        currency,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.onToCurrencySelected(currency)
-                                    toExpanded = false
-                                },
-                            )
-                        }
-                    }
-                }
-            }
-            TextField(
-                value = "%.2f".format(toAmount),
-                onValueChange = {
-                    viewModel.updateToAmount(it)
-                },
-                singleLine = true,
-                textStyle =
-                    LocalTextStyle.current.copy(
-                        fontSize = 32.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.End,
-                    ),
-                colors =
-                    TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                    ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .align(Alignment.TopCenter)
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(16.dp),
-                    clip = false,
-                ).border(
-                    width = 2.dp,
-                    color = Color.Transparent,
-                    shape = RoundedCornerShape(16.dp),
-                ).clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                Text("Sending from", color = MaterialTheme.colorScheme.primary)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val flag = flagFromString(fromCurrency)
-                    flag?.let {
-                        Image(
-                            painter = painterResource(it.resId),
-                            contentDescription = "Flag",
-                        )
-                    }
-                    Spacer(Modifier.padding(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier =
-                            Modifier.clickable {
-                                fromExpanded = true
-                            },
-                    ) {
-                        Text(
-                            fromCurrency,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Dropdown",
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = fromExpanded,
-                        onDismissRequest = { fromExpanded = false },
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                    ) {
-                        currencies.filter { it != toCurrency }.forEach { currency ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        currency,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.onFromCurrencySelected(currency)
-                                    fromExpanded = false
-                                },
-                            )
-                        }
-                    }
-                }
-            }
-            TextField(
-                value = "%.2f".format(fromAmount),
-                onValueChange = {
-                    viewModel.updateFromAmount(it)
-                },
-                singleLine = true,
-                textStyle =
-                    LocalTextStyle.current.copy(
-                        fontSize = 32.sp,
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.End,
-                    ),
-                colors =
-                    TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                    ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            IconButton(onClick = {
-                rotated = !rotated
-                viewModel.swapCurrency()
-            }) {
+    Column(Modifier.fillMaxSize()) {
+        Row(Modifier.padding(8.dp)) {
+            IconButton(onClick = onNavigateBack) {
                 Icon(
-                    painter = painterResource(R.drawable.reverse),
-                    contentDescription = "Swap",
-                    tint = MaterialTheme.colorScheme.background,
-                    modifier =
-                        Modifier
-                            .graphicsLayer(rotationZ = rotation)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondary)
-                            .padding(8.dp),
+                    imageVector = Icons.Rounded.ArrowBackIosNew,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
-            Box(
+        }
+        Box(
+            Modifier.fillMaxWidth().height(200.dp).padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Row(
                 Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.primary),
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .align(Alignment.BottomCenter)
+                    .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
+                    .background(MaterialTheme.colorScheme.tertiary)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                exchange?.let {
-                    Text(
-                        text = "1 $fromCurrency = %.2f $toCurrency".format(it.rate),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.background,
-                        modifier = Modifier.padding(horizontal = 8.dp),
+                Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    Text("Receiver gets")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val flag = flagFromString(toCurrency)
+                        flag?.let {
+                            Image(
+                                painter = painterResource(it.resId),
+                                contentDescription = "Flag",
+                            )
+                        }
+                        Spacer(Modifier.padding(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier.clickable {
+                                    toExpanded = true
+                                },
+                        ) {
+                            Text(toCurrency, fontWeight = FontWeight.Bold)
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Dropdown",
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = toExpanded,
+                            onDismissRequest = { toExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.background,
+                        ) {
+                            currencies.filter { it != fromCurrency }.forEach { currency ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            currency,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.onToCurrencySelected(currency)
+                                        toExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+                TextField(
+                    value = "%.2f".format(toAmount),
+                    onValueChange = {
+                        viewModel.updateToAmount(it)
+                    },
+                    singleLine = true,
+                    textStyle =
+                        LocalTextStyle.current.copy(
+                            fontSize = 32.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.End,
+                        ),
+                    colors =
+                        TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                        ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .align(Alignment.TopCenter)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        clip = false,
+                    ).border(
+                        width = 2.dp,
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(16.dp),
+                    ).clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    Text("Sending from", color = MaterialTheme.colorScheme.primary)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val flag = flagFromString(fromCurrency)
+                        flag?.let {
+                            Image(
+                                painter = painterResource(it.resId),
+                                contentDescription = "Flag",
+                            )
+                        }
+                        Spacer(Modifier.padding(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier.clickable {
+                                    fromExpanded = true
+                                },
+                        ) {
+                            Text(
+                                fromCurrency,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Dropdown",
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = fromExpanded,
+                            onDismissRequest = { fromExpanded = false },
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                        ) {
+                            currencies.filter { it != toCurrency }.forEach { currency ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            currency,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.onFromCurrencySelected(currency)
+                                        fromExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+                TextField(
+                    value = "%.2f".format(fromAmount),
+                    onValueChange = {
+                        viewModel.updateFromAmount(it)
+                    },
+                    singleLine = true,
+                    textStyle =
+                        LocalTextStyle.current.copy(
+                            fontSize = 32.sp,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.End,
+                        ),
+                    colors =
+                        TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                        ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                IconButton(onClick = {
+                    rotated = !rotated
+                    viewModel.swapCurrency()
+                }) {
+                    Icon(
+                        painter = painterResource(R.drawable.reverse),
+                        contentDescription = "Swap",
+                        tint = MaterialTheme.colorScheme.background,
+                        modifier =
+                            Modifier
+                                .graphicsLayer(rotationZ = rotation)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.secondary)
+                                .padding(8.dp),
                     )
                 }
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.primary),
+                ) {
+                    exchange?.let {
+                        Text(
+                            text = "1 $fromCurrency = %.2f $toCurrency".format(it.rate),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.padding(24.dp))
             }
-            Spacer(Modifier.padding(24.dp))
         }
     }
 }
