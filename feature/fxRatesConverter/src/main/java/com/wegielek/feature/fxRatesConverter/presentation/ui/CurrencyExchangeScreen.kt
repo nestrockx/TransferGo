@@ -141,6 +141,7 @@ fun CurrencyExchangeScreen(
                     DropdownMenu(
                         expanded = toExpanded,
                         onDismissRequest = { toExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.background,
                     ) {
                         currencies.filter { it != fromCurrency }.forEach { currency ->
                             DropdownMenuItem(
@@ -236,6 +237,7 @@ fun CurrencyExchangeScreen(
                     DropdownMenu(
                         expanded = fromExpanded,
                         onDismissRequest = { fromExpanded = false },
+                        containerColor = MaterialTheme.colorScheme.tertiary,
                     ) {
                         currencies.filter { it != toCurrency }.forEach { currency ->
                             DropdownMenuItem(
