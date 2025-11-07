@@ -1,5 +1,6 @@
 package com.wegielek.feature.fxRatesConverter.di
 
+import com.wegielek.feature.fxRatesConverter.data.network.NetworkObserver
 import com.wegielek.feature.fxRatesConverter.data.remote.ExchangeRateApi
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -48,4 +49,6 @@ val ratesNetworkModule =
         single<ExchangeRateApi> {
             get<Retrofit>().create(ExchangeRateApi::class.java)
         }
+
+        single { NetworkObserver(get()) }
     }
