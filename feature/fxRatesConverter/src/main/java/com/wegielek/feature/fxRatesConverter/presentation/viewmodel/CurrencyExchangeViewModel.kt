@@ -3,16 +3,13 @@ package com.wegielek.feature.fxRatesConverter.presentation.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wegielek.feature.fxRatesConverter.data.network.NetworkObserver
 import com.wegielek.feature.fxRatesConverter.domain.model.ExchangeRate
 import com.wegielek.feature.fxRatesConverter.domain.usecase.GetExchangeRateUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class CurrencyExchangeViewModel(
@@ -43,13 +40,13 @@ class CurrencyExchangeViewModel(
     fun updateFromAmount(amount: String) {
         val updatedFromAmount = amount.toDoubleOrNull() ?: return
         fromAmount.value = updatedFromAmount
-        getRate()
+        getExchangeRate()
     }
 
     fun updateToAmount(amount: String) {
         val updatedToAmount = amount.toDoubleOrNull() ?: return
         toAmount.value = updatedToAmount
-        getRate(true)
+        getExchangeRate(true)
     }
 
     fun swapCurrency() {
@@ -59,10 +56,10 @@ class CurrencyExchangeViewModel(
     }
 
     init {
-        getRate()
+        getExchangeRate()
     }
 
-    fun getRate(flipped: Boolean = false) {
+    fun getExchangeRate(flipped: Boolean = false) {
         if (fromCurrency.value.isEmpty() || toCurrency.value.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.IO) {

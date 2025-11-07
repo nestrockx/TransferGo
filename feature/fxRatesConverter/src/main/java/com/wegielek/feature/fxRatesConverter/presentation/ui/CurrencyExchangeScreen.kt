@@ -97,7 +97,7 @@ fun CurrencyExchangeScreen(
     var toExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(fromCurrency, toCurrency) {
-        viewModel.getRate()
+        viewModel.getExchangeRate()
     }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
