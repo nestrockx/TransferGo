@@ -86,9 +86,9 @@ fun CurrencyExchangeScreen(
     val fromAmount by viewModel.fromAmount.collectAsState()
     val toAmount by viewModel.toAmount.collectAsState()
 
-    var rotated by remember { mutableStateOf(false) }
-    val rotation by animateFloatAsState(
-        targetValue = if (rotated) 180f else 0f,
+    var swapCurrencyRotated by remember { mutableStateOf(false) }
+    val swapCurrencyRotation by animateFloatAsState(
+        targetValue = if (swapCurrencyRotated) 180f else 0f,
         label = "swap rotation",
     )
 
@@ -121,14 +121,14 @@ fun CurrencyExchangeScreen(
                         .height(100.dp)
                         .align(Alignment.BottomCenter)
                         .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                        .background(MaterialTheme.colorScheme.tertiary)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
                         .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        Text("Receiver gets")
+                        Text("Receiver gets", color = MaterialTheme.colorScheme.tertiary)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             val flag = flagFromString(toCurrency)
                             flag?.let {
@@ -220,7 +220,7 @@ fun CurrencyExchangeScreen(
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        Text("Sending from", color = MaterialTheme.colorScheme.primary)
+                        Text("Sending from", color = MaterialTheme.colorScheme.tertiary)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             val flag = flagFromString(fromCurrency)
                             flag?.let {
@@ -250,7 +250,7 @@ fun CurrencyExchangeScreen(
                             DropdownMenu(
                                 expanded = fromExpanded,
                                 onDismissRequest = { fromExpanded = false },
-                                containerColor = MaterialTheme.colorScheme.tertiary,
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                             ) {
                                 currencies.filter { it != toCurrency }.forEach { currency ->
                                     DropdownMenuItem(
@@ -301,7 +301,7 @@ fun CurrencyExchangeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     IconButton(onClick = {
-                        rotated = !rotated
+                        swapCurrencyRotated = !swapCurrencyRotated
                         viewModel.swapCurrency()
                     }) {
                         Icon(
@@ -310,7 +310,7 @@ fun CurrencyExchangeScreen(
                             tint = MaterialTheme.colorScheme.background,
                             modifier =
                                 Modifier
-                                    .graphicsLayer(rotationZ = rotation)
+                                    .graphicsLayer(rotationZ = swapCurrencyRotation)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.secondary)
                                     .padding(8.dp),

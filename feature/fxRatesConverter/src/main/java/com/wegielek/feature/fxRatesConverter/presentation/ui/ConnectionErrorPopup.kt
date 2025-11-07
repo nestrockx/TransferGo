@@ -75,7 +75,7 @@ fun ConnectionErrorPopup(
                     Text(
                         "Check your internet connection",
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.tertiary,
                     )
                 }
             }
@@ -85,7 +85,7 @@ fun ConnectionErrorPopup(
                 Icon(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = "Close",
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(20.dp),
                 )
             }

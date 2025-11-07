@@ -15,6 +15,7 @@ private val DarkColorScheme =
         primary = White,
         secondary = Blue,
         tertiary = Gray,
+        tertiaryContainer = LightGray,
         background = Black,
         error = Pink,
     )
@@ -24,6 +25,7 @@ private val LightColorScheme =
         primary = Black,
         secondary = Blue,
         tertiary = Gray,
+        tertiaryContainer = LightGray,
         background = White,
         error = Pink,
     /* Other default colors to override
