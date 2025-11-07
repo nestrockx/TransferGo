@@ -18,6 +18,7 @@ private val DarkColorScheme =
         tertiaryContainer = LightGray,
         background = Black,
         error = Pink,
+        errorContainer = LightPink,
     )
 
 private val LightColorScheme =
@@ -28,6 +29,7 @@ private val LightColorScheme =
         tertiaryContainer = LightGray,
         background = White,
         error = Pink,
+        errorContainer = LightPink,
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
     surface = Color(0xFFFFFBFE),

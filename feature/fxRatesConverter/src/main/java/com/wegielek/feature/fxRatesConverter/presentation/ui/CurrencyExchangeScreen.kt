@@ -19,7 +19,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -85,6 +87,8 @@ fun CurrencyExchangeScreen(
     val toCurrency by viewModel.toCurrency.collectAsState()
     val fromAmount by viewModel.fromAmount.collectAsState()
     val toAmount by viewModel.toAmount.collectAsState()
+
+    val fromAmountExceeded by viewModel.fromAmountExceeded.collectAsState()
 
     var swapCurrencyRotated by remember { mutableStateOf(false) }
     val swapCurrencyRotation by animateFloatAsState(
@@ -210,7 +214,12 @@ fun CurrencyExchangeScreen(
                             clip = false,
                         ).border(
                             width = 2.dp,
-                            color = Color.Transparent,
+                            color =
+                                if (!fromAmountExceeded) {
+                                    Color.Transparent
+                                } else {
+                                    MaterialTheme.colorScheme.errorContainer
+                                },
                             shape = RoundedCornerShape(16.dp),
                         ).clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.background)
@@ -278,7 +287,12 @@ fun CurrencyExchangeScreen(
                         textStyle =
                             LocalTextStyle.current.copy(
                                 fontSize = 32.sp,
-                                color = MaterialTheme.colorScheme.secondary,
+                                color =
+                                    if (!fromAmountExceeded) {
+                                        MaterialTheme.colorScheme.secondary
+                                    } else {
+                                        MaterialTheme.colorScheme.error
+                                    },
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.End,
                             ),
@@ -332,6 +346,31 @@ fun CurrencyExchangeScreen(
                         }
                     }
                     Spacer(Modifier.padding(24.dp))
+                }
+            }
+            if (fromAmountExceeded) {
+                Spacer(Modifier.padding(8.dp))
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f))
+                        .padding(8.dp),
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = "Info",
+                            tint = MaterialTheme.colorScheme.errorContainer,
+                        )
+                        Spacer(Modifier.padding(4.dp))
+                        Text(
+                            "Maximum sending amount: 20000 $fromCurrency",
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            fontSize = 15.sp,
+                        )
+                    }
                 }
             }
         }

@@ -17,6 +17,17 @@ class CurrencyExchangeViewModel(
 ) : ViewModel() {
     val logTag = "CurrencyExchangeViewmodel"
 
+    private val currencyLimits =
+        mapOf(
+            "PLN" to 20000.0,
+            "EUR" to 5000.0,
+            "GBP" to 1000.0,
+            "UAH" to 50000.0,
+        )
+
+    var fromAmountExceeded = MutableStateFlow(false)
+        private set
+
     var fromCurrency = MutableStateFlow("PLN")
         private set
     var toCurrency = MutableStateFlow("UAH")
@@ -64,17 +75,24 @@ class CurrencyExchangeViewModel(
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                _exchangeResult.value = getExchangeRateUseCase(fromCurrency.value, toCurrency.value, fromAmount.value)
                 if (flipped) {
+                    _exchangeResult.value = getExchangeRateUseCase(toCurrency.value, fromCurrency.value, toAmount.value)
                     fromAmount.value = _exchangeResult.value?.toAmount ?: 0.0
                 } else {
+                    _exchangeResult.value = getExchangeRateUseCase(fromCurrency.value, toCurrency.value, fromAmount.value)
                     toAmount.value = _exchangeResult.value?.toAmount ?: 0.0
                 }
+                validateFromAmount()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Log.e(logTag, "Error: ${e.message}")
             }
         }
+    }
+
+    private fun validateFromAmount() {
+        val limit = currencyLimits[fromCurrency.value] ?: return
+        fromAmountExceeded.value = fromAmount.value > limit
     }
 }
