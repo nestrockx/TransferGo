@@ -19,10 +19,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +40,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +57,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
 import com.wegielek.fx_rates_converter.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 sealed class Country(
@@ -87,6 +91,8 @@ fun CurrencyExchangeScreen(
     viewModel: CurrencyExchangeViewModel = koinViewModel(),
     onNavigateBack: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+
     val exchange by viewModel.exchangeResult.collectAsState()
 
     val fromCurrency by viewModel.fromCurrency.collectAsState()
@@ -158,8 +164,9 @@ fun CurrencyExchangeScreen(
                             ) {
                                 Text(toCurrency, fontWeight = FontWeight.Bold)
                                 Icon(
-                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    imageVector = Icons.Rounded.KeyboardArrowDown,
                                     contentDescription = "Dropdown",
+                                    tint = MaterialTheme.colorScheme.tertiary,
                                 )
                             }
                         }
@@ -240,8 +247,9 @@ fun CurrencyExchangeScreen(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                                 Icon(
-                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    imageVector = Icons.Rounded.KeyboardArrowDown,
                                     contentDescription = "Dropdown",
+                                    tint = MaterialTheme.colorScheme.tertiary,
                                 )
                             }
                         }
@@ -417,7 +425,7 @@ fun CurrencyExchangeScreen(
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
-                                contentDescription = "Dropdown",
+                                contentDescription = "Search",
                                 tint = MaterialTheme.colorScheme.tertiary,
                             )
                         },
@@ -439,8 +447,16 @@ fun CurrencyExchangeScreen(
                                     Modifier.fillMaxWidth().clickable {
                                         if (chooseFromCurrencyModalSheet) {
                                             viewModel.onFromCurrencySelected(currency)
+                                            scope.launch(Dispatchers.Main) {
+                                                sheetState.hide()
+                                                viewModel.hideChooseFromCurrencySheet()
+                                            }
                                         } else {
                                             viewModel.onToCurrencySelected(currency)
+                                            scope.launch(Dispatchers.Main) {
+                                                sheetState.hide()
+                                                viewModel.hideChooseToCurrencySheet()
+                                            }
                                         }
                                     },
                                     verticalAlignment = Alignment.CenterVertically,
