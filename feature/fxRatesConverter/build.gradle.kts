@@ -40,6 +40,9 @@ android {
 
 dependencies {
 
+    // Material icons
+    implementation(libs.androidx.material.icons.extended)
+
     // Koin
     implementation(libs.koin.core)
     implementation(libs.koin.android)
@@ -50,8 +53,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
 
-    // Core OkHttp
-    implementation(libs.okhttp)
+    // OkHttp
+    implementation(libs.logging.interceptor)
 
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
