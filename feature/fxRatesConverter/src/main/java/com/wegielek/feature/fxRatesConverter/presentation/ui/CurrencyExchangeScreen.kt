@@ -19,19 +19,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,31 +53,35 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
 import com.wegielek.fx_rates_converter.R
 import org.koin.androidx.compose.koinViewModel
 
-sealed class CountryFlag(
-    @param:DrawableRes val resId: Int,
+sealed class Country(
+    @param:DrawableRes val flagResId: Int,
+    val countryName: String,
+    val currencyName: String,
 ) {
-    data object England : CountryFlag(R.drawable.england_big)
+    data object England : Country(R.drawable.england_big, "Great Britain", "British Pound")
 
-    data object Poland : CountryFlag(R.drawable.poland_big)
+    data object Poland : Country(R.drawable.poland_big, "Poland", "Złoty")
 
-    data object Ukraine : CountryFlag(R.drawable.ukraine_big)
+    data object Ukraine : Country(R.drawable.ukraine_big, "Ukraine", "Hrivna")
 
-    data object Germany : CountryFlag(R.drawable.germany_big)
+    data object Germany : Country(R.drawable.germany_big, "Germany", "Euro")
 }
 
-fun flagFromString(currency: String): CountryFlag? =
+fun countryFromCurrency(currency: String): Country? =
     when (currency) {
-        "GBP" -> CountryFlag.England
-        "PLN" -> CountryFlag.Poland
-        "UAH" -> CountryFlag.Ukraine
-        "EUR" -> CountryFlag.Germany
+        "GBP" -> Country.England
+        "PLN" -> Country.Poland
+        "UAH" -> Country.Ukraine
+        "EUR" -> Country.Germany
         else -> null
     }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyExchangeScreen(
     viewModel: CurrencyExchangeViewModel = koinViewModel(),
@@ -87,7 +93,6 @@ fun CurrencyExchangeScreen(
     val toCurrency by viewModel.toCurrency.collectAsState()
     val fromAmount by viewModel.fromAmount.collectAsState()
     val toAmount by viewModel.toAmount.collectAsState()
-
     val fromAmountExceeded by viewModel.fromAmountExceeded.collectAsState()
 
     var swapCurrencyRotated by remember { mutableStateOf(false) }
@@ -97,8 +102,10 @@ fun CurrencyExchangeScreen(
     )
 
     val currencies = listOf("PLN", "UAH", "GBP", "EUR")
-    var fromExpanded by remember { mutableStateOf(false) }
-    var toExpanded by remember { mutableStateOf(false) }
+
+    val chooseFromCurrencyModalSheet by viewModel.chooseFromCurrencyModalSheet.collectAsState()
+    val chooseToCurrencyModalSheet by viewModel.chooseToCurrencyModalSheet.collectAsState()
+    val sheetState = rememberModalBottomSheetState()
 
     LaunchedEffect(fromCurrency, toCurrency) {
         viewModel.getExchangeRate()
@@ -134,10 +141,10 @@ fun CurrencyExchangeScreen(
                     ) {
                         Text("Receiver gets", color = MaterialTheme.colorScheme.tertiary)
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            val flag = flagFromString(toCurrency)
-                            flag?.let {
+                            val country = countryFromCurrency(toCurrency)
+                            country?.let {
                                 Image(
-                                    painter = painterResource(it.resId),
+                                    painter = painterResource(it.flagResId),
                                     contentDescription = "Flag",
                                 )
                             }
@@ -146,7 +153,7 @@ fun CurrencyExchangeScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier =
                                     Modifier.clickable {
-                                        toExpanded = true
+                                        viewModel.showChooseReceivingCurrencySheet()
                                     },
                             ) {
                                 Text(toCurrency, fontWeight = FontWeight.Bold)
@@ -155,32 +162,13 @@ fun CurrencyExchangeScreen(
                                     contentDescription = "Dropdown",
                                 )
                             }
-                            DropdownMenu(
-                                expanded = toExpanded,
-                                onDismissRequest = { toExpanded = false },
-                                containerColor = MaterialTheme.colorScheme.background,
-                            ) {
-                                currencies.filter { it != fromCurrency }.forEach { currency ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                currency,
-                                                color = MaterialTheme.colorScheme.primary,
-                                            )
-                                        },
-                                        onClick = {
-                                            viewModel.onToCurrencySelected(currency)
-                                            toExpanded = false
-                                        },
-                                    )
-                                }
-                            }
                         }
                     }
                     TextField(
-                        value = "%.2f".format(toAmount),
+                        value = toAmount.toString(),
                         onValueChange = {
-                            viewModel.updateToAmount(it)
+                            val limited = it.take(8)
+                            viewModel.updateToAmount(limited)
                         },
                         singleLine = true,
                         textStyle =
@@ -231,10 +219,10 @@ fun CurrencyExchangeScreen(
                     ) {
                         Text("Sending from", color = MaterialTheme.colorScheme.tertiary)
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            val flag = flagFromString(fromCurrency)
-                            flag?.let {
+                            val country = countryFromCurrency(fromCurrency)
+                            country?.let {
                                 Image(
-                                    painter = painterResource(it.resId),
+                                    painter = painterResource(it.flagResId),
                                     contentDescription = "Flag",
                                 )
                             }
@@ -243,7 +231,7 @@ fun CurrencyExchangeScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier =
                                     Modifier.clickable {
-                                        fromExpanded = true
+                                        viewModel.showChooseSendingCurrencySheet()
                                     },
                             ) {
                                 Text(
@@ -256,32 +244,13 @@ fun CurrencyExchangeScreen(
                                     contentDescription = "Dropdown",
                                 )
                             }
-                            DropdownMenu(
-                                expanded = fromExpanded,
-                                onDismissRequest = { fromExpanded = false },
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                            ) {
-                                currencies.filter { it != toCurrency }.forEach { currency ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                currency,
-                                                color = MaterialTheme.colorScheme.primary,
-                                            )
-                                        },
-                                        onClick = {
-                                            viewModel.onFromCurrencySelected(currency)
-                                            fromExpanded = false
-                                        },
-                                    )
-                                }
-                            }
                         }
                     }
                     TextField(
-                        value = "%.2f".format(fromAmount),
+                        value = fromAmount.toString(),
                         onValueChange = {
-                            viewModel.updateFromAmount(it)
+                            val limited = it.take(8)
+                            viewModel.updateFromAmount(limited)
                         },
                         singleLine = true,
                         textStyle =
@@ -374,10 +343,138 @@ fun CurrencyExchangeScreen(
                 }
             }
         }
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp).align(Alignment.BottomCenter),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.tertiaryContainer)
+                    .clickable {},
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "Request",
+                    modifier =
+                        Modifier.padding(16.dp),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Box(
+                Modifier
+                    .weight(1f)
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.secondary)
+                    .clickable {
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "Send",
+                    modifier = Modifier.padding(16.dp),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.background,
+                )
+            }
+        }
         ConnectionErrorPopup(
             modifier =
                 Modifier
                     .align(Alignment.TopCenter),
         )
+        if (chooseFromCurrencyModalSheet || chooseToCurrencyModalSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    viewModel.hideChooseFromCurrencySheet()
+                    viewModel.hideChooseToCurrencySheet()
+                },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.background,
+            ) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Text(
+                        if (chooseFromCurrencyModalSheet) "Sending from" else "Sending to",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 30.sp,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = "",
+                        onValueChange = {},
+                        label = {
+                            Text(
+                                "Search",
+                                color = MaterialTheme.colorScheme.tertiary,
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Dropdown",
+                                tint = MaterialTheme.colorScheme.tertiary,
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                    )
+                    Text(
+                        "All countries",
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Column(Modifier.fillMaxWidth()) {
+                        currencies
+                            .filter {
+                                if (chooseFromCurrencyModalSheet) it != toCurrency else it != fromCurrency
+                            }.forEach { currency ->
+                                Row(
+                                    Modifier.fillMaxWidth().clickable {
+                                        if (chooseFromCurrencyModalSheet) {
+                                            viewModel.onFromCurrencySelected(currency)
+                                        } else {
+                                            viewModel.onToCurrencySelected(currency)
+                                        }
+                                    },
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    val country = countryFromCurrency(currency)
+                                    country?.let {
+                                        Box(
+                                            Modifier
+                                                .padding(vertical = 8.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    MaterialTheme.colorScheme.tertiaryContainer,
+                                                ).padding(8.dp),
+                                        ) {
+                                            Image(
+                                                painter = painterResource(it.flagResId),
+                                                contentDescription = "Flag",
+                                            )
+                                        }
+                                        Spacer(Modifier.padding(8.dp))
+                                        Column {
+                                            Text(
+                                                it.countryName,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            )
+                                            Text(country.currencyName + " " + currency)
+                                        }
+                                    }
+                                }
+                            }
+                    }
+                }
+            }
+        }
     }
 }

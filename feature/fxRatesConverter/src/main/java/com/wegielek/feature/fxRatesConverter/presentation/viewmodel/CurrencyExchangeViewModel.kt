@@ -40,6 +40,28 @@ class CurrencyExchangeViewModel(
     private val _exchangeResult = MutableStateFlow<ExchangeRate?>(null)
     val exchangeResult: StateFlow<ExchangeRate?> = _exchangeResult.asStateFlow()
 
+    var chooseFromCurrencyModalSheet = MutableStateFlow(false)
+        private set
+
+    var chooseToCurrencyModalSheet = MutableStateFlow(false)
+        private set
+
+    fun showChooseSendingCurrencySheet() {
+        chooseFromCurrencyModalSheet.value = true
+    }
+
+    fun hideChooseFromCurrencySheet() {
+        chooseFromCurrencyModalSheet.value = false
+    }
+
+    fun showChooseReceivingCurrencySheet() {
+        chooseToCurrencyModalSheet.value = true
+    }
+
+    fun hideChooseToCurrencySheet() {
+        chooseToCurrencyModalSheet.value = false
+    }
+
     fun onToCurrencySelected(currency: String) {
         toCurrency.value = currency
     }
