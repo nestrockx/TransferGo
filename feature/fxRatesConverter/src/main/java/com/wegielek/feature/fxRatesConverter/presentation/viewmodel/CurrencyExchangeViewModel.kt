@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.wegielek.feature.fxRatesConverter.domain.model.ExchangeRate
 import com.wegielek.feature.fxRatesConverter.domain.usecase.GetExchangeRateUseCase
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,7 @@ import java.math.BigDecimal
 
 class CurrencyExchangeViewModel(
     private val getExchangeRateUseCase: GetExchangeRateUseCase,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     val logTag = "CurrencyExchangeViewmodel"
 
@@ -122,7 +124,7 @@ class CurrencyExchangeViewModel(
     fun getExchangeRate(reversed: Boolean = false) {
         if (fromCurrency.value.isEmpty() || toCurrency.value.isEmpty()) return
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 if (reversed) {
                     val reversedExchangeResult =

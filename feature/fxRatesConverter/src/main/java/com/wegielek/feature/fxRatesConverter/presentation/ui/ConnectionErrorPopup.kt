@@ -1,5 +1,10 @@
 package com.wegielek.feature.fxRatesConverter.presentation.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,10 +49,15 @@ fun ConnectionErrorPopup(
         }
     }
 
-    if (showInternetConnectionError) {
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = showInternetConnectionError,
+        enter = fadeIn() + scaleIn(initialScale = 0.9f),
+        exit = fadeOut() + scaleOut(targetScale = 0.9f),
+    ) {
         Row(
             modifier =
-                modifier
+                Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
                     .shadow(

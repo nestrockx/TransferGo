@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -38,10 +39,11 @@ import androidx.compose.ui.unit.sp
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CountriesModalSheet(viewModel: CurrencyExchangeViewModel) {
+fun CountriesModalSheet(viewModel: CurrencyExchangeViewModel = koinViewModel()) {
     val scope = rememberCoroutineScope()
 
     val currencies = listOf("PLN", "UAH", "GBP", "EUR")
@@ -68,7 +70,7 @@ fun CountriesModalSheet(viewModel: CurrencyExchangeViewModel) {
                 fontSize = 30.sp,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("sendingHeader"),
             )
             OutlinedTextField(
                 value = searchField,

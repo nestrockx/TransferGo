@@ -1,0 +1,142 @@
+import android.util.Log
+import app.cash.turbine.test
+import com.wegielek.feature.fxRatesConverter.domain.model.ExchangeRate
+import com.wegielek.feature.fxRatesConverter.domain.usecase.GetExchangeRateUseCase
+import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkStatic
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import java.math.BigDecimal
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class CurrencyExchangeViewModelTest {
+    private val testDispatcher = StandardTestDispatcher()
+
+    private lateinit var mockUseCase: GetExchangeRateUseCase
+    private lateinit var viewModel: CurrencyExchangeViewModel
+
+    @Before
+    fun setup() {
+        mockkStatic(Log::class)
+        every { Log.e(any(), any()) } returns 0
+
+        mockUseCase = mockk()
+        coEvery {
+            mockUseCase(any(), any(), any())
+        } returns
+            ExchangeRate(
+                from = "PLN",
+                to = "UAH",
+                fromAmount = BigDecimal(1),
+                toAmount = BigDecimal(2),
+                rate = BigDecimal(1.0),
+            )
+
+        viewModel =
+            CurrencyExchangeViewModel(
+                mockUseCase,
+                ioDispatcher = testDispatcher,
+            )
+    }
+
+    @Test
+    fun `getExchangeRate emits success`() =
+        runTest {
+            val expected =
+                ExchangeRate(
+                    from = "PLN",
+                    to = "UAH",
+                    rate = BigDecimal(10.0),
+                    fromAmount = BigDecimal(300),
+                    toAmount = BigDecimal(3000),
+                )
+
+            coEvery { mockUseCase("PLN", "UAH", BigDecimal(300)) } returns expected
+
+            viewModel.exchangeResult.test {
+                viewModel.getExchangeRate()
+
+                // Run all coroutines
+                testDispatcher.scheduler.advanceUntilIdle()
+
+                // Initial state
+                assertEquals(null, awaitItem())
+
+                // Emitted exchange
+                assertEquals(expected, awaitItem())
+
+                cancelAndConsumeRemainingEvents()
+            }
+
+            // Also check that toAmount is updated
+            assertEquals(expected.toAmount, viewModel.toAmount.value)
+        }
+
+    @Test
+    fun `getExchangeRate returns error for zero amount`() =
+        runTest {
+            coEvery {
+                mockUseCase(any(), any(), BigDecimal.ZERO)
+            } throws Exception("AMOUNT_TOO_LOW")
+
+            viewModel.updateFromAmount("0") // sets fromAmount to 0
+
+            viewModel.exchangeResult.test {
+                viewModel.getExchangeRate(true)
+                testDispatcher.scheduler.advanceUntilIdle()
+
+                // No new value emitted because use case throws
+                assertEquals(null, awaitItem())
+
+                cancelAndConsumeRemainingEvents()
+            }
+
+            // toAmount should remain 0
+            assertTrue(viewModel.toAmount.value.compareTo(BigDecimal.ZERO) == 0)
+        }
+
+    @Test
+    fun `fromAmountExceeded is true when amount exceeds limit`() =
+        runTest {
+            // PLN limit is 20000
+            viewModel.updateFromAmount("25000.00")
+
+            // Trigger validation manually
+            viewModel.getExchangeRate()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertTrue(viewModel.fromAmountExceeded.value)
+        }
+
+    @Test
+    fun `fromAmountExceeded is false when amount below limit`() =
+        runTest {
+            viewModel.updateFromAmount("15000")
+
+            viewModel.getExchangeRate()
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertFalse(viewModel.fromAmountExceeded.value)
+        }
+
+    @Test
+    fun `swapCurrency swaps from and to currencies`() =
+        runTest {
+            val originalFrom = viewModel.fromCurrency.value
+            val originalTo = viewModel.toCurrency.value
+
+            viewModel.swapCurrency()
+
+            assertEquals(originalFrom, viewModel.toCurrency.value)
+            assertEquals(originalTo, viewModel.fromCurrency.value)
+        }
+}

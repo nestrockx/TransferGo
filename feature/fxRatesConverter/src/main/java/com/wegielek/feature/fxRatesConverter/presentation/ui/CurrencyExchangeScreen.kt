@@ -42,14 +42,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.ConnectionErrorPopupViewModel
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
 import com.wegielek.fx_rates_converter.R
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import org.koin.androidx.compose.koinViewModel
@@ -79,9 +82,11 @@ fun countryFromCurrency(currency: String): Country? =
         else -> null
     }
 
+@OptIn(FlowPreview::class)
 @Composable
 fun CurrencyExchangeScreen(
     viewModel: CurrencyExchangeViewModel = koinViewModel(),
+    connectionErrorPopupViewModel: ConnectionErrorPopupViewModel = koinViewModel(),
     onNavigateBack: () -> Unit,
 ) {
     val exchange by viewModel.exchangeResult.collectAsState()
@@ -117,7 +122,7 @@ fun CurrencyExchangeScreen(
         viewModel.getExchangeRate()
     }
 
-    LaunchedEffect(fromAmountFlow.value) {
+    LaunchedEffect(fromAmountFlow) {
         fromAmountFlow
             .debounce(300)
             .collect {
@@ -125,7 +130,7 @@ fun CurrencyExchangeScreen(
             }
     }
 
-    LaunchedEffect(toAmountFlow.value) {
+    LaunchedEffect(toAmountFlow) {
         toAmountFlow
             .debounce(300)
             .collect {
@@ -249,7 +254,7 @@ fun CurrencyExchangeScreen(
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        Text("Sending from", color = MaterialTheme.colorScheme.tertiary)
+                        Text("Sending from", Modifier.testTag("sendingFromCurrency"), color = MaterialTheme.colorScheme.tertiary)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier =
@@ -325,7 +330,7 @@ fun CurrencyExchangeScreen(
                         Icon(
                             painter = painterResource(R.drawable.reverse),
                             contentDescription = "Swap",
-                            tint = MaterialTheme.colorScheme.background,
+                            tint = Color.White,
                             modifier =
                                 Modifier
                                     .graphicsLayer(rotationZ = swapCurrencyRotation)
@@ -422,6 +427,7 @@ fun CurrencyExchangeScreen(
             modifier =
                 Modifier
                     .align(Alignment.TopCenter),
+            viewModel = connectionErrorPopupViewModel,
         )
         if (chooseFromCurrencyModalSheet || chooseToCurrencyModalSheet) {
             CountriesModalSheet(viewModel)
