@@ -1,6 +1,7 @@
 package com.wegielek.feature.fxRatesConverter.domain.usecase
 
 import com.wegielek.feature.fxRatesConverter.domain.repository.ExchangeRatesRepository
+import java.math.BigDecimal
 
 class GetExchangeRateUseCase(
     private val exchangeRatesRepository: ExchangeRatesRepository,
@@ -8,6 +9,6 @@ class GetExchangeRateUseCase(
     suspend operator fun invoke(
         from: String,
         to: String,
-        amount: Double,
+        amount: BigDecimal,
     ) = exchangeRatesRepository.getRates(from, to, amount)
 }

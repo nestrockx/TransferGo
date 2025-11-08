@@ -3,6 +3,7 @@ package com.wegielek.feature.fxRatesConverter.data.repository
 import com.wegielek.feature.fxRatesConverter.data.remote.ExchangeRateApi
 import com.wegielek.feature.fxRatesConverter.domain.model.ExchangeRate
 import com.wegielek.feature.fxRatesConverter.domain.repository.ExchangeRatesRepository
+import java.math.BigDecimal
 
 class ExchangeRatesRepositoryImpl(
     private val exchangeRateApi: ExchangeRateApi,
@@ -10,6 +11,6 @@ class ExchangeRatesRepositoryImpl(
     override suspend fun getRates(
         from: String,
         to: String,
-        amount: Double,
+        amount: BigDecimal,
     ): ExchangeRate = exchangeRateApi.getRate(from, to, amount).toDomain()
 }

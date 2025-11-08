@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 
 class CurrencyExchangeViewModel(
     private val getExchangeRateUseCase: GetExchangeRateUseCase,
@@ -19,10 +20,10 @@ class CurrencyExchangeViewModel(
 
     private val currencyLimits =
         mapOf(
-            "PLN" to 20000.0,
-            "EUR" to 5000.0,
-            "GBP" to 1000.0,
-            "UAH" to 50000.0,
+            "PLN" to BigDecimal(20000.0),
+            "EUR" to BigDecimal(5000.0),
+            "GBP" to BigDecimal(1000.0),
+            "UAH" to BigDecimal(50000.0),
         )
 
     var fromAmountExceeded = MutableStateFlow(false)
@@ -32,9 +33,9 @@ class CurrencyExchangeViewModel(
         private set
     var toCurrency = MutableStateFlow("UAH")
         private set
-    var fromAmount = MutableStateFlow(300.0)
+    var fromAmount = MutableStateFlow(BigDecimal(300.0))
         private set
-    var toAmount = MutableStateFlow(0.0)
+    var toAmount = MutableStateFlow(BigDecimal(0.0))
         private set
 
     private val _exchangeResult = MutableStateFlow<ExchangeRate?>(null)
@@ -71,13 +72,13 @@ class CurrencyExchangeViewModel(
     }
 
     fun updateFromAmount(amount: String) {
-        val updatedFromAmount = amount.toDoubleOrNull() ?: return
+        val updatedFromAmount = amount.toBigDecimalOrNull() ?: return
         fromAmount.value = updatedFromAmount
         getExchangeRate()
     }
 
     fun updateToAmount(amount: String) {
-        val updatedToAmount = amount.toDoubleOrNull() ?: return
+        val updatedToAmount = amount.toBigDecimalOrNull() ?: return
         toAmount.value = updatedToAmount
         getExchangeRate(true)
     }
@@ -99,10 +100,10 @@ class CurrencyExchangeViewModel(
             try {
                 if (flipped) {
                     _exchangeResult.value = getExchangeRateUseCase(toCurrency.value, fromCurrency.value, toAmount.value)
-                    fromAmount.value = _exchangeResult.value?.toAmount ?: 0.0
+                    fromAmount.value = _exchangeResult.value?.toAmount ?: BigDecimal(0.0)
                 } else {
                     _exchangeResult.value = getExchangeRateUseCase(fromCurrency.value, toCurrency.value, fromAmount.value)
-                    toAmount.value = _exchangeResult.value?.toAmount ?: 0.0
+                    toAmount.value = _exchangeResult.value?.toAmount ?: BigDecimal(0.0)
                 }
                 validateFromAmount()
             } catch (e: CancellationException) {

@@ -54,13 +54,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
 import com.wegielek.fx_rates_converter.R
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import java.math.RoundingMode
 
 sealed class Country(
     @param:DrawableRes val flagResId: Int,
@@ -132,13 +131,21 @@ fun CurrencyExchangeScreen(
                 Modifier.fillMaxWidth().height(200.dp).padding(horizontal = 16.dp),
                 contentAlignment = Alignment.Center,
             ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .align(Alignment.BottomCenter)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.tertiaryContainer),
+                )
                 Row(
                     Modifier
                         .fillMaxWidth()
                         .height(100.dp)
                         .align(Alignment.BottomCenter)
                         .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+//                        .background(MaterialTheme.colorScheme.tertiaryContainer)
                         .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -172,10 +179,12 @@ fun CurrencyExchangeScreen(
                         }
                     }
                     TextField(
-                        value = toAmount.toString(),
+                        value =
+                            toAmount
+                                .setScale(2, RoundingMode.HALF_UP)
+                                .toPlainString(),
                         onValueChange = {
-                            val limited = it.take(8)
-                            viewModel.updateToAmount(limited)
+                            viewModel.updateToAmount(it)
                         },
                         singleLine = true,
                         textStyle =
@@ -255,10 +264,12 @@ fun CurrencyExchangeScreen(
                         }
                     }
                     TextField(
-                        value = fromAmount.toString(),
+                        value =
+                            fromAmount
+                                .setScale(2, RoundingMode.HALF_UP)
+                                .toPlainString(),
                         onValueChange = {
-                            val limited = it.take(8)
-                            viewModel.updateFromAmount(limited)
+                            viewModel.updateFromAmount(it)
                         },
                         singleLine = true,
                         textStyle =
