@@ -72,13 +72,41 @@ class CurrencyExchangeViewModel(
     }
 
     fun updateFromAmount(amount: String) {
-        val updatedFromAmount = amount.toBigDecimalOrNull() ?: return
+        var correctedAmount = amount
+        if (!amount.contains(".")) {
+            val len = amount.length
+            correctedAmount =
+                if (len > 2) {
+                    amount.take(len - 2) + "." + amount.substring(len - 2)
+                } else {
+                    "0." + amount.padStart(2, '0')
+                }
+        }
+        val normalizedAmount =
+            correctedAmount
+                .replace(" ", "")
+                .replace(",", "")
+        val updatedFromAmount = normalizedAmount.toBigDecimalOrNull() ?: return
         fromAmount.value = updatedFromAmount
         getExchangeRate()
     }
 
     fun updateToAmount(amount: String) {
-        val updatedToAmount = amount.toBigDecimalOrNull() ?: return
+        var correctedAmount = amount
+        if (!amount.contains(".")) {
+            val len = amount.length
+            correctedAmount =
+                if (len > 2) {
+                    amount.take(len - 2) + "." + amount.substring(len - 2)
+                } else {
+                    "0." + amount.padStart(2, '0')
+                }
+        }
+        val normalizedAmount =
+            correctedAmount
+                .replace(" ", "")
+                .replace(",", "")
+        val updatedToAmount = normalizedAmount.toBigDecimalOrNull() ?: return
         toAmount.value = updatedToAmount
         getExchangeRate(true)
     }
@@ -117,5 +145,12 @@ class CurrencyExchangeViewModel(
     private fun validateFromAmount() {
         val limit = currencyLimits[fromCurrency.value] ?: return
         fromAmountExceeded.value = fromAmount.value > limit
+    }
+
+    var searchField = MutableStateFlow("")
+
+    fun updateSearchField(value: String) {
+        if (value.length > 20) return
+        searchField.value = value
     }
 }

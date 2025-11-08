@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -50,8 +51,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
@@ -60,6 +63,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.text.NumberFormat
+import java.util.Locale
 
 sealed class Country(
     @param:DrawableRes val flagResId: Int,
@@ -112,6 +119,18 @@ fun CurrencyExchangeScreen(
     val chooseToCurrencyModalSheet by viewModel.chooseToCurrencyModalSheet.collectAsState()
     val sheetState = rememberModalBottomSheetState()
 
+    val searchField by viewModel.searchField.collectAsState()
+
+    val amountFormat: DecimalFormat =
+        run {
+            val symbols =
+                DecimalFormatSymbols().apply {
+                    decimalSeparator = '.'
+                    groupingSeparator = ' '
+                }
+            DecimalFormat("#,##0.00", symbols)
+        }
+
     LaunchedEffect(fromCurrency, toCurrency) {
         viewModel.getExchangeRate()
     }
@@ -145,7 +164,6 @@ fun CurrencyExchangeScreen(
                         .height(100.dp)
                         .align(Alignment.BottomCenter)
                         .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-//                        .background(MaterialTheme.colorScheme.tertiaryContainer)
                         .padding(start = 16.dp, top = 16.dp, bottom = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -179,10 +197,10 @@ fun CurrencyExchangeScreen(
                         }
                     }
                     TextField(
-                        value =
-                            toAmount
-                                .setScale(2, RoundingMode.HALF_UP)
-                                .toPlainString(),
+                        value = amountFormat.format(toAmount),
+//                            toAmount
+//                                .setScale(2, RoundingMode.HALF_UP)
+//                                .toPlainString(),
                         onValueChange = {
                             viewModel.updateToAmount(it)
                         },
@@ -264,10 +282,10 @@ fun CurrencyExchangeScreen(
                         }
                     }
                     TextField(
-                        value =
-                            fromAmount
-                                .setScale(2, RoundingMode.HALF_UP)
-                                .toPlainString(),
+                        value = amountFormat.format(fromAmount),
+//                            fromAmount
+//                                .setScale(2, RoundingMode.HALF_UP)
+//                                .toPlainString(),
                         onValueChange = {
                             viewModel.updateFromAmount(it)
                         },
@@ -425,8 +443,8 @@ fun CurrencyExchangeScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                     OutlinedTextField(
-                        value = "",
-                        onValueChange = {},
+                        value = searchField,
+                        onValueChange = { viewModel.updateSearchField(it) },
                         label = {
                             Text(
                                 "Search",
@@ -442,6 +460,10 @@ fun CurrencyExchangeScreen(
                         },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                        keyboardOptions =
+                            KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Search,
+                            ),
                     )
                     Text(
                         "All countries",
@@ -450,10 +472,24 @@ fun CurrencyExchangeScreen(
                         fontWeight = FontWeight.Bold,
                     )
                     Column(Modifier.fillMaxWidth()) {
-                        currencies
-                            .filter {
+                        val filteredCurrencies =
+                            currencies.filter {
                                 if (chooseFromCurrencyModalSheet) it != toCurrency else it != fromCurrency
-                            }.forEach { currency ->
+                            }
+                        filteredCurrencies
+                            .forEach { currency ->
+                                val country = countryFromCurrency(currency)
+                                val search = searchField.lowercase()
+                                if (searchField.isNotEmpty()) {
+                                    country?.let {
+                                        if (!currency.lowercase().contains(search) &&
+                                            !it.countryName.lowercase().contains(search) &&
+                                            !it.currencyName.lowercase().contains(search)
+                                        ) {
+                                            return@forEach
+                                        }
+                                    }
+                                }
                                 Row(
                                     Modifier.fillMaxWidth().clickable {
                                         if (chooseFromCurrencyModalSheet) {
@@ -472,7 +508,6 @@ fun CurrencyExchangeScreen(
                                     },
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    val country = countryFromCurrency(currency)
                                     country?.let {
                                         Box(
                                             Modifier
