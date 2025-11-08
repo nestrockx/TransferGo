@@ -8,9 +8,9 @@ import java.math.BigDecimal
 class ExchangeRatesRepositoryImpl(
     private val exchangeRateApi: ExchangeRateApi,
 ) : ExchangeRatesRepository {
-    override suspend fun getRates(
+    override suspend fun getExchangeRate(
         from: String,
         to: String,
         amount: BigDecimal,
-    ): ExchangeRate = exchangeRateApi.getRate(from, to, amount).toDomain()
+    ): ExchangeRate? = exchangeRateApi.getExchangeRate(from, to, amount)?.toDomain()
 }

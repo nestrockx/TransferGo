@@ -10,5 +10,5 @@ class GetExchangeRateUseCase(
         from: String,
         to: String,
         amount: BigDecimal,
-    ) = exchangeRatesRepository.getRates(from, to, amount)
+    ) = exchangeRatesRepository.getExchangeRate(from, to, amount)
 }

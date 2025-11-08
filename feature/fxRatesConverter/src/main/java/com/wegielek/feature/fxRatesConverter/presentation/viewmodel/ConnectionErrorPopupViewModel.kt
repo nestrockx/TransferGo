@@ -24,4 +24,9 @@ class ConnectionErrorPopupViewModel(
     fun hideInternetConnectionError() {
         showInternetConnectionError.value = false
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        networkObserver.unregister()
+    }
 }

@@ -18,7 +18,7 @@ class CurrencyExchangeViewModel(
 ) : ViewModel() {
     val logTag = "CurrencyExchangeViewmodel"
 
-    private val currencyLimits =
+    val currencyLimits =
         mapOf(
             "PLN" to BigDecimal(20000.0),
             "EUR" to BigDecimal(5000.0),
@@ -64,11 +64,19 @@ class CurrencyExchangeViewModel(
     }
 
     fun onToCurrencySelected(currency: String) {
-        toCurrency.value = currency
+        if (currency == fromCurrency.value) {
+            swapCurrency()
+        } else {
+            toCurrency.value = currency
+        }
     }
 
     fun onFromCurrencySelected(currency: String) {
-        fromCurrency.value = currency
+        if (currency == toCurrency.value) {
+            swapCurrency()
+        } else {
+            fromCurrency.value = currency
+        }
     }
 
     fun updateFromAmount(amount: String) {
@@ -88,7 +96,6 @@ class CurrencyExchangeViewModel(
                 .replace(",", "")
         val updatedFromAmount = normalizedAmount.toBigDecimalOrNull() ?: return
         fromAmount.value = updatedFromAmount
-        getExchangeRate()
     }
 
     fun updateToAmount(amount: String) {
@@ -108,7 +115,6 @@ class CurrencyExchangeViewModel(
                 .replace(",", "")
         val updatedToAmount = normalizedAmount.toBigDecimalOrNull() ?: return
         toAmount.value = updatedToAmount
-        getExchangeRate(true)
     }
 
     fun swapCurrency() {
@@ -117,20 +123,26 @@ class CurrencyExchangeViewModel(
         toCurrency.value = tmp
     }
 
-    init {
-        getExchangeRate()
-    }
-
-    fun getExchangeRate(flipped: Boolean = false) {
+    fun getExchangeRate(reversed: Boolean = false) {
         if (fromCurrency.value.isEmpty() || toCurrency.value.isEmpty()) return
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (flipped) {
-                    _exchangeResult.value = getExchangeRateUseCase(toCurrency.value, fromCurrency.value, toAmount.value)
-                    fromAmount.value = _exchangeResult.value?.toAmount ?: BigDecimal(0.0)
+                if (reversed) {
+                    val reversedExchangeResult =
+                        getExchangeRateUseCase(
+                            toCurrency.value,
+                            fromCurrency.value,
+                            toAmount.value,
+                        )
+                    fromAmount.value = reversedExchangeResult?.toAmount ?: BigDecimal(0.0)
                 } else {
-                    _exchangeResult.value = getExchangeRateUseCase(fromCurrency.value, toCurrency.value, fromAmount.value)
+                    _exchangeResult.value =
+                        getExchangeRateUseCase(
+                            fromCurrency.value,
+                            toCurrency.value,
+                            fromAmount.value,
+                        )
                     toAmount.value = _exchangeResult.value?.toAmount ?: BigDecimal(0.0)
                 }
                 validateFromAmount()

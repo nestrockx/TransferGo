@@ -7,9 +7,9 @@ import java.math.BigDecimal
 
 interface ExchangeRateApi {
     @GET("fx-rates/")
-    suspend fun getRate(
+    suspend fun getExchangeRate(
         @Query("from") from: String,
         @Query("to") to: String,
         @Query("amount") amount: BigDecimal,
-    ): ExchangeRateDto
+    ): ExchangeRateDto?
 }

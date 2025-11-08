@@ -17,33 +17,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,22 +44,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
 import com.wegielek.fx_rates_converter.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
 import org.koin.androidx.compose.koinViewModel
-import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
-import java.text.NumberFormat
-import java.util.Locale
 
 sealed class Country(
     @param:DrawableRes val flagResId: Int,
@@ -93,20 +79,19 @@ fun countryFromCurrency(currency: String): Country? =
         else -> null
     }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CurrencyExchangeScreen(
     viewModel: CurrencyExchangeViewModel = koinViewModel(),
     onNavigateBack: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-
     val exchange by viewModel.exchangeResult.collectAsState()
 
     val fromCurrency by viewModel.fromCurrency.collectAsState()
     val toCurrency by viewModel.toCurrency.collectAsState()
     val fromAmount by viewModel.fromAmount.collectAsState()
+    val fromAmountFlow = remember { MutableStateFlow("") }
     val toAmount by viewModel.toAmount.collectAsState()
+    val toAmountFlow = remember { MutableStateFlow("") }
     val fromAmountExceeded by viewModel.fromAmountExceeded.collectAsState()
 
     var swapCurrencyRotated by remember { mutableStateOf(false) }
@@ -115,13 +100,8 @@ fun CurrencyExchangeScreen(
         label = "swap rotation",
     )
 
-    val currencies = listOf("PLN", "UAH", "GBP", "EUR")
-
     val chooseFromCurrencyModalSheet by viewModel.chooseFromCurrencyModalSheet.collectAsState()
     val chooseToCurrencyModalSheet by viewModel.chooseToCurrencyModalSheet.collectAsState()
-    val sheetState = rememberModalBottomSheetState()
-
-    val searchField by viewModel.searchField.collectAsState()
 
     val amountFormat: DecimalFormat =
         run {
@@ -135,6 +115,22 @@ fun CurrencyExchangeScreen(
 
     LaunchedEffect(fromCurrency, toCurrency) {
         viewModel.getExchangeRate()
+    }
+
+    LaunchedEffect(fromAmountFlow.value) {
+        fromAmountFlow
+            .debounce(300)
+            .collect {
+                viewModel.getExchangeRate()
+            }
+    }
+
+    LaunchedEffect(toAmountFlow.value) {
+        toAmountFlow
+            .debounce(300)
+            .collect {
+                viewModel.getExchangeRate(true)
+            }
     }
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -202,10 +198,8 @@ fun CurrencyExchangeScreen(
                     }
                     TextField(
                         value = amountFormat.format(toAmount),
-//                            toAmount
-//                                .setScale(2, RoundingMode.HALF_UP)
-//                                .toPlainString(),
                         onValueChange = {
+                            toAmountFlow.value = it
                             viewModel.updateToAmount(it)
                         },
                         singleLine = true,
@@ -289,10 +283,8 @@ fun CurrencyExchangeScreen(
                     }
                     TextField(
                         value = amountFormat.format(fromAmount),
-//                            fromAmount
-//                                .setScale(2, RoundingMode.HALF_UP)
-//                                .toPlainString(),
                         onValueChange = {
+                            fromAmountFlow.value = it
                             viewModel.updateFromAmount(it)
                         },
                         singleLine = true,
@@ -378,7 +370,8 @@ fun CurrencyExchangeScreen(
                         )
                         Spacer(Modifier.padding(4.dp))
                         Text(
-                            "Maximum sending amount: 20000 $fromCurrency",
+                            "Maximum sending amount: " +
+                                "${viewModel.currencyLimits[fromCurrency]} $fromCurrency",
                             color = MaterialTheme.colorScheme.errorContainer,
                             fontSize = 15.sp,
                         )
@@ -431,126 +424,7 @@ fun CurrencyExchangeScreen(
                     .align(Alignment.TopCenter),
         )
         if (chooseFromCurrencyModalSheet || chooseToCurrencyModalSheet) {
-            ModalBottomSheet(
-                onDismissRequest = {
-                    viewModel.hideChooseFromCurrencySheet()
-                    viewModel.hideChooseToCurrencySheet()
-                },
-                sheetState = sheetState,
-                containerColor = MaterialTheme.colorScheme.background,
-            ) {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    Text(
-                        if (chooseFromCurrencyModalSheet) "Sending from" else "Sending to",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 30.sp,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    OutlinedTextField(
-                        value = searchField,
-                        onValueChange = { viewModel.updateSearchField(it) },
-                        label = {
-                            Text(
-                                "Search",
-                                color = MaterialTheme.colorScheme.tertiary,
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MaterialTheme.colorScheme.tertiary,
-                            )
-                        },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                        keyboardOptions =
-                            KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Search,
-                            ),
-                    )
-                    Text(
-                        "All countries",
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Column(Modifier.fillMaxWidth()) {
-                        val filteredCurrencies =
-                            currencies.filter {
-                                if (chooseFromCurrencyModalSheet) it != toCurrency else it != fromCurrency
-                            }
-                        filteredCurrencies
-                            .forEach { currency ->
-                                val country = countryFromCurrency(currency)
-                                val search = searchField.lowercase()
-                                if (searchField.isNotEmpty()) {
-                                    country?.let {
-                                        if (!currency.lowercase().contains(search) &&
-                                            !it.countryName.lowercase().contains(search) &&
-                                            !it.currencyName.lowercase().contains(search)
-                                        ) {
-                                            return@forEach
-                                        }
-                                    }
-                                }
-                                Row(
-                                    Modifier.fillMaxWidth().clickable {
-                                        if (chooseFromCurrencyModalSheet) {
-                                            viewModel.onFromCurrencySelected(currency)
-                                            scope.launch(Dispatchers.Main) {
-                                                sheetState.hide()
-                                                viewModel.hideChooseFromCurrencySheet()
-                                            }
-                                        } else {
-                                            viewModel.onToCurrencySelected(currency)
-                                            scope.launch(Dispatchers.Main) {
-                                                sheetState.hide()
-                                                viewModel.hideChooseToCurrencySheet()
-                                            }
-                                        }
-                                    },
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    country?.let {
-                                        Box(
-                                            Modifier
-                                                .padding(vertical = 8.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    MaterialTheme.colorScheme.tertiaryContainer,
-                                                ).padding(8.dp),
-                                        ) {
-                                            Image(
-                                                painter = painterResource(it.flagResId),
-                                                contentDescription = "Flag",
-                                            )
-                                        }
-                                        Spacer(Modifier.padding(8.dp))
-                                        Column {
-                                            Text(
-                                                it.countryName,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.primary,
-                                            )
-                                            Text(
-                                                country.currencyName + " • " + currency,
-                                                color = MaterialTheme.colorScheme.tertiary,
-                                            )
-                                        }
-                                    }
-                                }
-                                HorizontalDivider(
-                                    Modifier.padding(horizontal = 16.dp),
-                                    DividerDefaults.Thickness,
-                                    MaterialTheme.colorScheme.tertiaryContainer,
-                                )
-                            }
-                    }
-                }
-            }
+            CountriesModalSheet(viewModel)
         }
     }
 }

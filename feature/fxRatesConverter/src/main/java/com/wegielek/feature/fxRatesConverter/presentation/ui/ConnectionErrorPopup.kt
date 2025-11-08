@@ -30,8 +30,8 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun ConnectionErrorPopup(
-    viewModel: ConnectionErrorPopupViewModel = koinViewModel(),
     modifier: Modifier,
+    viewModel: ConnectionErrorPopupViewModel = koinViewModel(),
 ) {
     val isConnected by viewModel.isConnected.collectAsState()
     val showInternetConnectionError by viewModel.showInternetConnectionError.collectAsState()
