@@ -80,25 +80,22 @@ class CurrencyExchangeViewModel(
     }
 
     fun updateFromAmount(amount: String) {
-        var correctedAmount = amount
-        if (!amount.contains(".")) {
-            val len = amount.length
-            correctedAmount =
-                if (len > 2) {
-                    amount.take(len - 2) + "." + amount.substring(len - 2)
-                } else {
-                    "0." + amount.padStart(2, '0')
-                }
+        val updatedFromAmount = processAmount(amount).toBigDecimalOrNull() ?: return
+        if (updatedFromAmount.compareTo(BigDecimal.ZERO) == 0) {
+            toAmount.value = updatedFromAmount
         }
-        val normalizedAmount =
-            correctedAmount
-                .replace(" ", "")
-                .replace(",", "")
-        val updatedFromAmount = normalizedAmount.toBigDecimalOrNull() ?: return
         fromAmount.value = updatedFromAmount
     }
 
     fun updateToAmount(amount: String) {
+        val updatedToAmount = processAmount(amount).toBigDecimalOrNull() ?: return
+        if (updatedToAmount.compareTo(BigDecimal.ZERO) == 0) {
+            fromAmount.value = updatedToAmount
+        }
+        toAmount.value = updatedToAmount
+    }
+
+    private fun processAmount(amount: String): String {
         var correctedAmount = amount
         if (!amount.contains(".")) {
             val len = amount.length
@@ -113,8 +110,7 @@ class CurrencyExchangeViewModel(
             correctedAmount
                 .replace(" ", "")
                 .replace(",", "")
-        val updatedToAmount = normalizedAmount.toBigDecimalOrNull() ?: return
-        toAmount.value = updatedToAmount
+        return normalizedAmount
     }
 
     fun swapCurrency() {
