@@ -24,7 +24,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -171,7 +173,13 @@ fun CurrencyExchangeScreen(
                         verticalArrangement = Arrangement.SpaceEvenly,
                     ) {
                         Text("Receiver gets", color = MaterialTheme.colorScheme.tertiary)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier.clickable {
+                                    viewModel.showChooseReceivingCurrencySheet()
+                                },
+                        ) {
                             val country = countryFromCurrency(toCurrency)
                             country?.let {
                                 Image(
@@ -182,10 +190,6 @@ fun CurrencyExchangeScreen(
                             Spacer(Modifier.padding(8.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier.clickable {
-                                        viewModel.showChooseReceivingCurrencySheet()
-                                    },
                             ) {
                                 Text(toCurrency, fontWeight = FontWeight.Bold)
                                 Icon(
@@ -252,7 +256,13 @@ fun CurrencyExchangeScreen(
                         verticalArrangement = Arrangement.SpaceEvenly,
                     ) {
                         Text("Sending from", color = MaterialTheme.colorScheme.tertiary)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier =
+                                Modifier.clickable {
+                                    viewModel.showChooseSendingCurrencySheet()
+                                },
+                        ) {
                             val country = countryFromCurrency(fromCurrency)
                             country?.let {
                                 Image(
@@ -263,10 +273,6 @@ fun CurrencyExchangeScreen(
                             Spacer(Modifier.padding(8.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier.clickable {
-                                        viewModel.showChooseSendingCurrencySheet()
-                                    },
                             ) {
                                 Text(
                                     fromCurrency,
@@ -529,10 +535,18 @@ fun CurrencyExchangeScreen(
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.primary,
                                             )
-                                            Text(country.currencyName + " " + currency)
+                                            Text(
+                                                country.currencyName + " • " + currency,
+                                                color = MaterialTheme.colorScheme.tertiary,
+                                            )
                                         }
                                     }
                                 }
+                                HorizontalDivider(
+                                    Modifier.padding(horizontal = 16.dp),
+                                    DividerDefaults.Thickness,
+                                    MaterialTheme.colorScheme.tertiaryContainer,
+                                )
                             }
                     }
                 }
