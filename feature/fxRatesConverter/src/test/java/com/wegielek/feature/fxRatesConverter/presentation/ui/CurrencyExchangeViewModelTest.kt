@@ -139,4 +139,98 @@ class CurrencyExchangeViewModelTest {
             assertEquals(originalFrom, viewModel.toCurrency.value)
             assertEquals(originalTo, viewModel.fromCurrency.value)
         }
+
+    // ----------------------------------------------------------------------------------------------
+    @Test
+    fun `updateFromAmount formats value correctly`() =
+        runTest {
+            viewModel.updateFromAmount("12345") // should become 123.45
+            assertEquals(BigDecimal("123.45"), viewModel.fromAmount.value)
+        }
+
+    @Test
+    fun `updateToAmount formats value and updates fromAmount when zero`() =
+        runTest {
+            viewModel.updateToAmount("000") // becomes 0.00
+            assertEquals(BigDecimal("0.00"), viewModel.toAmount.value)
+            assertEquals(BigDecimal("0.00"), viewModel.fromAmount.value)
+        }
+
+    @Test
+    fun `getExchangeRate reversed updates fromAmount`() =
+        runTest {
+            val expected =
+                ExchangeRate(
+                    from = "UAH",
+                    to = "PLN",
+                    fromAmount = BigDecimal(100),
+                    toAmount = BigDecimal(400),
+                    rate = BigDecimal(4),
+                )
+
+            coEvery { mockUseCase("UAH", "PLN", BigDecimal(2)) } returns expected
+            viewModel.toAmount.value = BigDecimal(2)
+
+            viewModel.getExchangeRate(reversed = true)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(expected.toAmount, viewModel.fromAmount.value)
+        }
+
+    @Test
+    fun `validateFromAmount updates when currency changes`() =
+        runTest {
+            // Set fromAmount to exceed UAH limit but not PLN limit
+            viewModel.updateFromAmount("6000000") // → 60000.00
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            // Still PLN, limit is 20000, so exceeded
+            viewModel.getExchangeRate()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertTrue(viewModel.fromAmountExceeded.value)
+
+            // Change currency to EUR which has limit 5000
+            viewModel.onFromCurrencySelected("EUR")
+            viewModel.getExchangeRate()
+            testDispatcher.scheduler.advanceUntilIdle()
+            assertTrue(viewModel.fromAmountExceeded.value)
+        }
+
+    @Test
+    fun `show and hide modal sheets update state`() =
+        runTest {
+            viewModel.showChooseSendingCurrencySheet()
+            assertTrue(viewModel.chooseFromCurrencyModalSheet.value)
+
+            viewModel.hideChooseFromCurrencySheet()
+            assertFalse(viewModel.chooseFromCurrencyModalSheet.value)
+
+            viewModel.showChooseReceivingCurrencySheet()
+            assertTrue(viewModel.chooseToCurrencyModalSheet.value)
+
+            viewModel.hideChooseToCurrencySheet()
+            assertFalse(viewModel.chooseToCurrencyModalSheet.value)
+        }
+
+    @Test
+    fun `onToCurrencySelected swaps when equal to fromCurrency`() =
+        runTest {
+            viewModel.fromCurrency.value = "PLN"
+            viewModel.toCurrency.value = "UAH"
+
+            viewModel.onToCurrencySelected("PLN")
+
+            assertEquals("PLN", viewModel.toCurrency.value)
+            assertEquals("UAH", viewModel.fromCurrency.value)
+        }
+
+    @Test
+    fun `searchField does not accept more than 20 characters`() =
+        runTest {
+            viewModel.updateSearchField("A".repeat(25))
+            assertEquals("", viewModel.searchField.value)
+
+            viewModel.updateSearchField("12345")
+            assertEquals("12345", viewModel.searchField.value)
+        }
 }
