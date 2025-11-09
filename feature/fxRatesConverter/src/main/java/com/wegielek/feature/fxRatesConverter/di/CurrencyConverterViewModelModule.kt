@@ -5,7 +5,7 @@ import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExch
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
-val ratesViewModelModule =
+val currencyConverterViewModelModule =
     module {
         viewModel { CurrencyExchangeViewModel(get()) }
         viewModel { ConnectionErrorPopupViewModel(get()) }

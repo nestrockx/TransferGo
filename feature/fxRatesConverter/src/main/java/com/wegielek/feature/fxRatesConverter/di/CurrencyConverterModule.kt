@@ -4,7 +4,7 @@ import com.wegielek.feature.fxRatesConverter.data.repository.ExchangeRatesReposi
 import com.wegielek.feature.fxRatesConverter.domain.repository.ExchangeRatesRepository
 import org.koin.dsl.module
 
-val exchangeRatesRepositoryModule =
+val currencyConverterRepositoryModule =
     module {
         single<ExchangeRatesRepository> { ExchangeRatesRepositoryImpl(get()) }
     }

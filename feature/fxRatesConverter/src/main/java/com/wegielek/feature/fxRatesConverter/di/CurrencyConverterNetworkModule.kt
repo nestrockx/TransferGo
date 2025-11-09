@@ -23,7 +23,7 @@ val forceHttpsInterceptor =
         chain.proceed(httpsRequest)
     }
 
-val ratesNetworkModule =
+val currencyConverterNetworkModule =
     module {
         single {
             val logging =
