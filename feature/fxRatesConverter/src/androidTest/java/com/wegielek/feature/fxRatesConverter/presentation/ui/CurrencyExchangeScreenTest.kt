@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.wegielek.feature.fxRatesConverter.domain.model.ExchangeRate
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.ConnectionErrorPopupViewModel
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
@@ -159,5 +160,153 @@ class CurrencyExchangeScreenTest {
         composeTestRule.runOnIdle {
             verify { viewModel.swapCurrency() }
         }
+    }
+
+    @Test
+    fun currencyExchangeScreen_canOpenReceivingCurrencyModalAndSelectCurrency() {
+        // Arrange flows (same as in your tests)
+        val fromCurrencyFlow = MutableStateFlow("PLN")
+        val toCurrencyFlow = MutableStateFlow("UAH")
+        val fromAmountFlow = MutableStateFlow(BigDecimal(100.0))
+        val toAmountFlow = MutableStateFlow(BigDecimal(0.0))
+        val chooseFromSheetFlow = MutableStateFlow(false)
+        val chooseToSheetFlow = MutableStateFlow(false)
+        val fromAmountExceededFlow = MutableStateFlow(false)
+        val searchFieldFlow = MutableStateFlow("")
+        val exchangeFlow = MutableStateFlow(ExchangeRate("PLN", "UAH", BigDecimal(1.2), BigDecimal(120.0), BigDecimal(120.0)))
+
+        val connectionErrorPopupViewModel = mockk<ConnectionErrorPopupViewModel>(relaxed = true)
+        every { connectionErrorPopupViewModel.isConnected } returns MutableStateFlow(true)
+        every { connectionErrorPopupViewModel.showInternetConnectionError } returns MutableStateFlow(false)
+
+        val viewModel = mockk<CurrencyExchangeViewModel>(relaxed = true)
+        every { viewModel.fromCurrency } returns fromCurrencyFlow
+        every { viewModel.toCurrency } returns toCurrencyFlow
+        every { viewModel.fromAmount } returns fromAmountFlow
+        every { viewModel.toAmount } returns toAmountFlow
+        every { viewModel.chooseFromCurrencyModalSheet } returns chooseFromSheetFlow
+        every { viewModel.chooseToCurrencyModalSheet } returns chooseToSheetFlow
+        every { viewModel.fromAmountExceeded } returns fromAmountExceededFlow
+        every { viewModel.searchField } returns searchFieldFlow
+        every { viewModel.exchangeResult } returns exchangeFlow
+
+        composeTestRule.setContent {
+            CurrencyExchangeScreen(
+                viewModel = viewModel,
+                connectionErrorPopupViewModel = connectionErrorPopupViewModel,
+                onNavigateBack = {},
+            )
+        }
+
+        // Act → Click receiving currency "UAH"
+        composeTestRule.onNodeWithText("UAH").performClick()
+
+        // Trigger modal visibility
+        composeTestRule.runOnIdle { chooseToSheetFlow.value = true }
+
+        // Assert modal appears
+        composeTestRule.onNodeWithText("Sending to").assertIsDisplayed()
+
+        // Click "EUR"
+        composeTestRule.onNodeWithText("Euro • EUR").performClick()
+
+        composeTestRule.runOnIdle {
+            verify { viewModel.onToCurrencySelected("EUR") }
+            verify { viewModel.hideChooseToCurrencySheet() }
+        }
+    }
+
+    @Test
+    fun currencyExchangeScreen_editSendingAmount_updatesViewModel() {
+        // Arrange minimal flows
+        val fromCurrencyFlow = MutableStateFlow("PLN")
+        val toCurrencyFlow = MutableStateFlow("UAH")
+        val fromAmountFlow = MutableStateFlow(BigDecimal(100.0))
+        val toAmountFlow = MutableStateFlow(BigDecimal(0.0))
+
+        val viewModel = mockk<CurrencyExchangeViewModel>(relaxed = true)
+        every { viewModel.fromCurrency } returns fromCurrencyFlow
+        every { viewModel.toCurrency } returns toCurrencyFlow
+        every { viewModel.fromAmount } returns fromAmountFlow
+        every { viewModel.toAmount } returns toAmountFlow
+        every { viewModel.chooseFromCurrencyModalSheet } returns MutableStateFlow(false)
+        every { viewModel.chooseToCurrencyModalSheet } returns MutableStateFlow(false)
+        every { viewModel.fromAmountExceeded } returns MutableStateFlow(false)
+        every { viewModel.searchField } returns MutableStateFlow("")
+        every { viewModel.exchangeResult } returns MutableStateFlow(null)
+
+        val connectionErrorPopupViewModel = mockk<ConnectionErrorPopupViewModel>(relaxed = true)
+        every { connectionErrorPopupViewModel.isConnected } returns MutableStateFlow(true)
+        every { connectionErrorPopupViewModel.showInternetConnectionError } returns MutableStateFlow(false)
+
+        composeTestRule.setContent {
+            CurrencyExchangeScreen(viewModel, connectionErrorPopupViewModel, {})
+        }
+
+        // Act
+        composeTestRule
+            .onNodeWithText("100.00") // formatted
+            .performTextInput("1")
+
+        // Assert
+        composeTestRule.runOnIdle {
+            verify { viewModel.updateFromAmount("1100.00") }
+        }
+    }
+
+    @Test
+    fun currencyExchangeScreen_showsWarningWhenFromAmountExceeded() {
+        val fromAmountExceededFlow = MutableStateFlow(true)
+
+        val viewModel = mockk<CurrencyExchangeViewModel>(relaxed = true)
+        every { viewModel.fromAmountExceeded } returns fromAmountExceededFlow
+        every { viewModel.fromCurrency } returns MutableStateFlow("PLN")
+        every { viewModel.currencyLimits } returns mapOf("PLN" to BigDecimal(20000))
+        every { viewModel.toCurrency } returns MutableStateFlow("UAH")
+        every { viewModel.fromAmount } returns MutableStateFlow(BigDecimal(0))
+        every { viewModel.toAmount } returns MutableStateFlow(BigDecimal(0))
+        every { viewModel.chooseFromCurrencyModalSheet } returns MutableStateFlow(false)
+        every { viewModel.chooseToCurrencyModalSheet } returns MutableStateFlow(false)
+        every { viewModel.searchField } returns MutableStateFlow("")
+        every { viewModel.exchangeResult } returns MutableStateFlow(null)
+
+        val connectionErrorPopupViewModel = mockk<ConnectionErrorPopupViewModel>(relaxed = true)
+        every { connectionErrorPopupViewModel.isConnected } returns MutableStateFlow(true)
+        every { connectionErrorPopupViewModel.showInternetConnectionError } returns MutableStateFlow(false)
+
+        composeTestRule.setContent {
+            CurrencyExchangeScreen(viewModel, connectionErrorPopupViewModel, {})
+        }
+
+        composeTestRule.onNodeWithText("Maximum sending amount: 20000 PLN").assertIsDisplayed()
+    }
+
+    @Test
+    fun currencyExchangeScreen_showsExchangeRate() {
+        val exchangeFlow =
+            MutableStateFlow(
+                ExchangeRate("PLN", "UAH", BigDecimal("1.23"), BigDecimal.ZERO, BigDecimal.ZERO),
+            )
+
+        val viewModel = mockk<CurrencyExchangeViewModel>(relaxed = true)
+        every { viewModel.exchangeResult } returns exchangeFlow
+        every { viewModel.fromCurrency } returns MutableStateFlow("PLN")
+        every { viewModel.toCurrency } returns MutableStateFlow("UAH")
+        every { viewModel.fromAmount } returns MutableStateFlow(BigDecimal(10))
+        every { viewModel.toAmount } returns MutableStateFlow(BigDecimal(12.3))
+        every { viewModel.chooseFromCurrencyModalSheet } returns MutableStateFlow(false)
+        every { viewModel.chooseToCurrencyModalSheet } returns MutableStateFlow(false)
+        every { viewModel.fromAmountExceeded } returns MutableStateFlow(false)
+        every { viewModel.searchField } returns MutableStateFlow("")
+
+        val connectionErrorPopupViewModel = mockk<ConnectionErrorPopupViewModel>(relaxed = true)
+        every { connectionErrorPopupViewModel.isConnected } returns MutableStateFlow(true)
+        every { connectionErrorPopupViewModel.showInternetConnectionError } returns MutableStateFlow(false)
+
+        composeTestRule.setContent {
+            CurrencyExchangeScreen(viewModel, connectionErrorPopupViewModel, {})
+        }
+
+        composeTestRule.onNodeWithText("1 PLN = 1.23 UAH").assertIsDisplayed()
     }
 }
