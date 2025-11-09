@@ -22,3 +22,5 @@
 
 -keep class com.wegielek.feature.fxRatesConverter.data.model.** { *; }
 -keep class com.wegielek.feature.fxRatesConverter.domain.model.** { *; }
+-keep class com.wegielek.feature.fxRatesConverter.presentation.** { *; }
+-keep class com.wegielek.feature.fxRatesConverter.di.** { *; }
