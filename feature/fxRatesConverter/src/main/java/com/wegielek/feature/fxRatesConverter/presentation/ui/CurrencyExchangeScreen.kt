@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -173,7 +174,10 @@ fun CurrencyExchangeScreen(
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        Text("Receiver gets", color = MaterialTheme.colorScheme.tertiary)
+                        Text(
+                            stringResource(R.string.receiver_gets),
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier =
@@ -254,7 +258,11 @@ fun CurrencyExchangeScreen(
                     Column(
                         verticalArrangement = Arrangement.SpaceEvenly,
                     ) {
-                        Text("Sending from", Modifier.testTag("sendingFromCurrency"), color = MaterialTheme.colorScheme.tertiary)
+                        Text(
+                            stringResource(R.string.sending_from),
+                            Modifier.testTag("sendingFromCurrency"),
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier =
@@ -375,7 +383,7 @@ fun CurrencyExchangeScreen(
                         )
                         Spacer(Modifier.padding(4.dp))
                         Text(
-                            "Maximum sending amount: " +
+                            stringResource(R.string.max_sending_amount) + " " +
                                 "${viewModel.currencyLimits[fromCurrency]} $fromCurrency",
                             color = MaterialTheme.colorScheme.errorContainer,
                             fontSize = 15.sp,
@@ -398,7 +406,7 @@ fun CurrencyExchangeScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "Request",
+                    stringResource(R.string.request),
                     modifier =
                         Modifier.padding(16.dp),
                     fontWeight = FontWeight.Bold,
@@ -416,7 +424,7 @@ fun CurrencyExchangeScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "Send",
+                    stringResource(R.string.send),
                     modifier = Modifier.padding(16.dp),
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.background,

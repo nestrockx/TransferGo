@@ -31,12 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.CurrencyExchangeViewModel
+import com.wegielek.fx_rates_converter.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -65,7 +67,11 @@ fun CountriesModalSheet(viewModel: CurrencyExchangeViewModel = koinViewModel()) 
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Text(
-                if (chooseFromCurrencyModalSheet) "Sending from" else "Sending to",
+                if (chooseFromCurrencyModalSheet) {
+                    stringResource(R.string.sending_from)
+                } else {
+                    stringResource(R.string.sending_to)
+                },
                 fontWeight = FontWeight.Bold,
                 fontSize = 30.sp,
                 textAlign = TextAlign.Center,
@@ -79,7 +85,7 @@ fun CountriesModalSheet(viewModel: CurrencyExchangeViewModel = koinViewModel()) 
                 },
                 label = {
                     Text(
-                        "Search",
+                        stringResource(R.string.search),
                         color = MaterialTheme.colorScheme.tertiary,
                     )
                 },
@@ -98,7 +104,7 @@ fun CountriesModalSheet(viewModel: CurrencyExchangeViewModel = koinViewModel()) 
                     ),
             )
             Text(
-                "All countries",
+                stringResource(R.string.all_countries),
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,

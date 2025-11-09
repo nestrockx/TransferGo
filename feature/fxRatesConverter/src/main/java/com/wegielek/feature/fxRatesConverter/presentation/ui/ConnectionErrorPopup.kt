@@ -27,10 +27,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wegielek.feature.fxRatesConverter.presentation.viewmodel.ConnectionErrorPopupViewModel
+import com.wegielek.fx_rates_converter.R
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -77,13 +79,13 @@ fun ConnectionErrorPopup(
                 Spacer(Modifier.padding(8.dp))
                 Column {
                     Text(
-                        "No network",
+                        stringResource(R.string.no_network),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(
-                        "Check your internet connection",
+                        stringResource(R.string.check_connnection),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.tertiary,
                     )
