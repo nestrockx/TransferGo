@@ -208,8 +208,10 @@ fun CurrencyExchangeScreen(
                     TextField(
                         value = amountFormat.format(toAmount),
                         onValueChange = {
-                            toAmountFlow.value = it
-                            viewModel.updateToAmount(it)
+                            if (it.length < 12) {
+                                toAmountFlow.value = it
+                                viewModel.updateToAmount(it)
+                            }
                         },
                         singleLine = true,
                         textStyle =
@@ -297,8 +299,10 @@ fun CurrencyExchangeScreen(
                     TextField(
                         value = amountFormat.format(fromAmount),
                         onValueChange = {
-                            fromAmountFlow.value = it
-                            viewModel.updateFromAmount(it)
+                            if (it.length < 12) {
+                                fromAmountFlow.value = it
+                                viewModel.updateFromAmount(it)
+                            }
                         },
                         singleLine = true,
                         textStyle =
