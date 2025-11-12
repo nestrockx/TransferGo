@@ -52,134 +52,137 @@ fun CountriesModalSheet(viewModel: CurrencyExchangeViewModel = koinViewModel()) 
     val sheetState = rememberModalBottomSheetState()
     val searchField by viewModel.searchField.collectAsState()
 
+    val chooseToCurrencyModalSheet by viewModel.chooseToCurrencyModalSheet.collectAsState()
     val chooseFromCurrencyModalSheet by viewModel.chooseFromCurrencyModalSheet.collectAsState()
 
     val fromCurrency by viewModel.fromCurrency.collectAsState()
     val toCurrency by viewModel.toCurrency.collectAsState()
 
-    ModalBottomSheet(
-        onDismissRequest = {
-            viewModel.hideChooseFromCurrencySheet()
-            viewModel.hideChooseToCurrencySheet()
-        },
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.background,
-    ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            Text(
-                if (chooseFromCurrencyModalSheet) {
-                    stringResource(R.string.sending_from)
-                } else {
-                    stringResource(R.string.sending_to)
-                },
-                fontWeight = FontWeight.Bold,
-                fontSize = 30.sp,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.fillMaxWidth().testTag("sendingHeader"),
-            )
-            OutlinedTextField(
-                value = searchField,
-                onValueChange = {
-                    viewModel.updateSearchField(it)
-                },
-                label = {
-                    Text(
-                        stringResource(R.string.search),
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.tertiary,
-                    )
-                },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                keyboardOptions =
-                    KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Search,
-                    ),
-            )
-            Text(
-                stringResource(R.string.all_countries),
-                fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-            )
-            Column(Modifier.fillMaxWidth()) {
-                val filteredCurrencies =
-                    currencies.filter {
-                        if (chooseFromCurrencyModalSheet) it != fromCurrency else it != toCurrency
-                    }
-                filteredCurrencies
-                    .forEach { currency ->
-                        val country = countryFromCurrency(currency)
-                        val search = searchField.lowercase()
-                        if (searchField.isNotEmpty()) {
-                            country?.let {
-                                if (!currency.lowercase().contains(search) &&
-                                    !it.countryName.lowercase().contains(search) &&
-                                    !it.currencyName.lowercase().contains(search)
-                                ) {
-                                    return@forEach
-                                }
-                            }
-                        }
-                        Row(
-                            Modifier.fillMaxWidth().clickable {
-                                if (chooseFromCurrencyModalSheet) {
-                                    viewModel.onFromCurrencySelected(currency)
-                                    scope.launch(Dispatchers.Main) {
-                                        sheetState.hide()
-                                        viewModel.hideChooseFromCurrencySheet()
-                                    }
-                                } else {
-                                    viewModel.onToCurrencySelected(currency)
-                                    scope.launch(Dispatchers.Main) {
-                                        sheetState.hide()
-                                        viewModel.hideChooseToCurrencySheet()
-                                    }
-                                }
-                            },
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            country?.let {
-                                Box(
-                                    Modifier
-                                        .padding(vertical = 8.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            MaterialTheme.colorScheme.tertiaryContainer,
-                                        ).padding(8.dp),
-                                ) {
-                                    Image(
-                                        painter = painterResource(it.flagResId),
-                                        contentDescription = "Flag",
-                                    )
-                                }
-                                Spacer(Modifier.padding(8.dp))
-                                Column {
-                                    Text(
-                                        it.countryName,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                    )
-                                    Text(
-                                        country.currencyName + " • " + currency,
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                    )
-                                }
-                            }
-                        }
-                        HorizontalDivider(
-                            Modifier.padding(horizontal = 16.dp),
-                            DividerDefaults.Thickness,
-                            MaterialTheme.colorScheme.tertiaryContainer,
+    if (chooseFromCurrencyModalSheet || chooseToCurrencyModalSheet) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                viewModel.hideChooseFromCurrencySheet()
+                viewModel.hideChooseToCurrencySheet()
+            },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.background,
+        ) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                Text(
+                    if (chooseFromCurrencyModalSheet) {
+                        stringResource(R.string.sending_from)
+                    } else {
+                        stringResource(R.string.sending_to)
+                    },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 30.sp,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.fillMaxWidth().testTag("sendingHeader"),
+                )
+                OutlinedTextField(
+                    value = searchField,
+                    onValueChange = {
+                        viewModel.updateSearchField(it)
+                    },
+                    label = {
+                        Text(
+                            stringResource(R.string.search),
+                            color = MaterialTheme.colorScheme.tertiary,
                         )
-                    }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.tertiary,
+                        )
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                    keyboardOptions =
+                        KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Search,
+                        ),
+                )
+                Text(
+                    stringResource(R.string.all_countries),
+                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
+                Column(Modifier.fillMaxWidth()) {
+                    val filteredCurrencies =
+                        currencies.filter {
+                            if (chooseFromCurrencyModalSheet) it != fromCurrency else it != toCurrency
+                        }
+                    filteredCurrencies
+                        .forEach { currency ->
+                            val country = countryFromCurrency(currency)
+                            val search = searchField.lowercase()
+                            if (searchField.isNotEmpty()) {
+                                country?.let {
+                                    if (!currency.lowercase().contains(search) &&
+                                        !it.countryName.lowercase().contains(search) &&
+                                        !it.currencyName.lowercase().contains(search)
+                                    ) {
+                                        return@forEach
+                                    }
+                                }
+                            }
+                            Row(
+                                Modifier.fillMaxWidth().clickable {
+                                    if (chooseFromCurrencyModalSheet) {
+                                        viewModel.onFromCurrencySelected(currency)
+                                        scope.launch(Dispatchers.Main) {
+                                            sheetState.hide()
+                                            viewModel.hideChooseFromCurrencySheet()
+                                        }
+                                    } else {
+                                        viewModel.onToCurrencySelected(currency)
+                                        scope.launch(Dispatchers.Main) {
+                                            sheetState.hide()
+                                            viewModel.hideChooseToCurrencySheet()
+                                        }
+                                    }
+                                },
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                country?.let {
+                                    Box(
+                                        Modifier
+                                            .padding(vertical = 8.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                MaterialTheme.colorScheme.tertiaryContainer,
+                                            ).padding(8.dp),
+                                    ) {
+                                        Image(
+                                            painter = painterResource(it.flagResId),
+                                            contentDescription = "Flag",
+                                        )
+                                    }
+                                    Spacer(Modifier.padding(8.dp))
+                                    Column {
+                                        Text(
+                                            it.countryName,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                        Text(
+                                            country.currencyName + " • " + currency,
+                                            color = MaterialTheme.colorScheme.tertiary,
+                                        )
+                                    }
+                                }
+                            }
+                            HorizontalDivider(
+                                Modifier.padding(horizontal = 16.dp),
+                                DividerDefaults.Thickness,
+                                MaterialTheme.colorScheme.tertiaryContainer,
+                            )
+                        }
+                }
             }
         }
     }

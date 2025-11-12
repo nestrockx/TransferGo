@@ -106,9 +106,6 @@ fun CurrencyExchangeScreen(
         label = "swap rotation",
     )
 
-    val chooseFromCurrencyModalSheet by viewModel.chooseFromCurrencyModalSheet.collectAsState()
-    val chooseToCurrencyModalSheet by viewModel.chooseToCurrencyModalSheet.collectAsState()
-
     val amountFormat: DecimalFormat =
         run {
             val symbols =
@@ -441,8 +438,6 @@ fun CurrencyExchangeScreen(
                     .align(Alignment.TopCenter),
             viewModel = connectionErrorPopupViewModel,
         )
-        if (chooseFromCurrencyModalSheet || chooseToCurrencyModalSheet) {
-            CountriesModalSheet(viewModel)
-        }
+        CountriesModalSheet(viewModel)
     }
 }
